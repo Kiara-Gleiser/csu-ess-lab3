@@ -17,6 +17,9 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(readr)
+library(patchwork)
+library(maps)
+
 ```
 
 
@@ -314,24 +317,17 @@ ggplot() +
 
 # Question 8
 ```{r}
-library(tidyverse)
-library(lubridate)
-library(patchwork)
-library(maps)
-
-# Read County Centroids
 county_centroids_url <- "https://raw.githubusercontent.com/mikejohnson51/csu-ess-330/main/resources/county-centroids.csv"
 county_locations <- read_csv(county_centroids_url) %>%
   mutate(FIPS = as.character(fips)) %>%
   select(FIPS, lat = LAT, lon = LON)  
 
-# Merge COVID data with location
+
 covid_with_location <- covid_data %>%
   mutate(FIPS = as.character(fips)) %>%
   inner_join(county_locations, by = "FIPS") %>%
-  mutate(month = format(date, "%m"))  # Extract month
+  mutate(month = format(date, "%m")) 
 
-# Compute WMC for Cases
 wmc_cases <- covid_with_location %>%
   group_by(date) %>%
   summarize(
@@ -342,7 +338,6 @@ wmc_cases <- covid_with_location %>%
   ) %>%
   ungroup()
 
-# Compute WMC for Deaths
 wmc_deaths <- covid_with_location %>%
   group_by(date) %>%
   summarize(
@@ -353,7 +348,6 @@ wmc_deaths <- covid_with_location %>%
   ) %>%
   ungroup()
 
-# Plot WMC for Cases
 cases_plot <- ggplot() +
   borders("state", fill = "gray90", colour = "white") +
   geom_point(data = wmc_cases, aes(x = WMC_LON, y = WMC_LAT, color = month, size = total_cases), alpha = 0.7) +
@@ -374,7 +368,6 @@ cases_plot <- ggplot() +
   ) +
   guides(color = guide_legend(title = "Month"), size = guide_legend(title = "Total Cases"))
 
-# Plot WMC for Deaths
 deaths_plot <- ggplot() +
   borders("state", fill = "gray90", colour = "white") +
   geom_point(data = wmc_deaths, aes(x = WMC_LON, y = WMC_LAT, color = month, size = total_deaths), alpha = 0.7) +
